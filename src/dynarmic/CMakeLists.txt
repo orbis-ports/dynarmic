@@ -480,6 +480,13 @@ elseif (APPLE)
             backend/exception_handler_macos_mig.c
         )
     endif()
+elseif (ORBIS)
+    # The PS4 has no POSIX signal-based fastmem: exception_handler_posix.cpp reads rip and rsp out
+    # of ucontext_t through a per-OS macro, and its __FreeBSD__ arm is unreachable here because the
+    # SDK's libc++ <__config> does `#undef __FreeBSD__` in every C++ translation unit. The generic
+    # handler is the truthful answer - SupportsFastmem() returns false and dynarmic uses the slow
+    # memory path.
+    target_sources(dynarmic PRIVATE backend/exception_handler_generic.cpp)
 elseif (UNIX)
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_link_libraries(dynarmic PRIVATE rt)
